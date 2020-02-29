@@ -1,6 +1,5 @@
 package org.btn.supervisor
 
-<<<<<<< HEAD
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelOption
 import org.btn.common.*
