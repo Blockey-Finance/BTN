@@ -8,11 +8,11 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.channel.CombinedChannelDuplexHandler
 import io.netty.handler.codec.MessageToByteEncoder
-import org.btn.common.BtnLog
+import org.btn.common.Log
 import java.nio.charset.Charset
 
-private val enclog = BtnLog("BtnCmd Encoder",true)
-private val declog = BtnLog("BtnCmdDecoder",true)
+private val enclog = Log("BtnCmd Encoder", true)
+private val declog = Log("BtnCmdDecoder", true)
 const val BTN_CMD_FLAG = 0x7F1A2B3C
 val CHARSET: Charset = Charset.forName("UTF-8")
 val BTN_PING_CMD = BtnCmd("PING{}")
@@ -71,7 +71,7 @@ open class BtnCmd(open val body:String ){
     }
 }
 
-open class BtnCmdEncoder: MessageToByteEncoder<BtnCmd>() {
+open class CmdEncoder: MessageToByteEncoder<BtnCmd>() {
     init {
         enclog.info("BtnCmd Encoder Created")
     }
@@ -97,7 +97,7 @@ open class BtnCmdEncoder: MessageToByteEncoder<BtnCmd>() {
     }
 }
 
-open class BtnCmdDecoder:ChannelInboundHandlerAdapter(){
+open class CmdDecoder:ChannelInboundHandlerAdapter(){
     private enum class State {
         INIT,
         READ_COMMAND
@@ -206,8 +206,8 @@ open class BtnCmdDecoder:ChannelInboundHandlerAdapter(){
 
 }
 
-class BtnCmdCodec : CombinedChannelDuplexHandler<BtnCmdDecoder, BtnCmdEncoder>() {
+class CmdCodec : CombinedChannelDuplexHandler<CmdDecoder, CmdEncoder>() {
     init {
-        init(BtnCmdDecoder(), BtnCmdEncoder())
+        init(CmdDecoder(), CmdEncoder())
     }
 }

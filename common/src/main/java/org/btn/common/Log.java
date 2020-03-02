@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.Locale;
 
 
-public class BtnLog {
+public class Log {
     private final static int INFO = 0;
     private final static int ERR  = 1 ;
     private final static int WARN = 2 ;
@@ -17,9 +17,9 @@ public class BtnLog {
     long startTime = System.currentTimeMillis();
     long lastLogTime = System.currentTimeMillis();
     public boolean silent = false;
-    public BtnLog(String name){ this(name,false); }
-    public BtnLog(String name, boolean silient){ this(name,silient,false); }
-    public BtnLog(String name, boolean silient, boolean logToFile){
+    public Log(String name){ this(name,false); }
+    public Log(String name, boolean silient){ this(name,silient,false); }
+    public Log(String name, boolean silient, boolean logToFile){
         this._name = name;
         this.silent = silient;
         this.logToFile = logToFile;

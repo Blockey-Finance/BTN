@@ -3,12 +3,10 @@ package org.btn.common
 import io.netty.buffer.Unpooled
 import io.netty.util.CharsetUtil
 
-import java.math.BigInteger
 import java.security.*
 import java.security.spec.EncodedKeySpec
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
-import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.spec.SecretKeySpec
@@ -93,7 +91,7 @@ fun asymDecrypt(pubBytes:ByteArray?, data:ByteArray, keyIsPub:Boolean = true):By
 }
 
 fun rsaKeyPair(): KeyPair? {
-    val mslog = BtnLog("BinaryKP")
+    val mslog = Log("BinaryKP")
     mslog.info("start")
     val secureRandom = SecureRandom()
     val keyPairGenerator = KeyPairGenerator.getInstance(RSA_KF)
