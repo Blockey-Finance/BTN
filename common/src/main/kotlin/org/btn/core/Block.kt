@@ -13,4 +13,5 @@ abstract class Block{
         return true
     }
 
+    lateinit var header:BlockHeader
 }
