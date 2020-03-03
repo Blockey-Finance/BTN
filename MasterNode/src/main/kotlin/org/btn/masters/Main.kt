@@ -4,8 +4,7 @@ import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelOption
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
-
-const val PRIMARY_PORT = 10001
+import org.btn.common.PRIMARY_PORT
 
 fun main() {
     val mBoss = NioEventLoopGroup(1) //for listen
@@ -19,7 +18,7 @@ fun main() {
             .option(ChannelOption.SO_REUSEADDR, true)
             .option(ChannelOption.SO_REUSEADDR, true)
             .childOption(ChannelOption.SO_KEEPALIVE, true)
-            .childHandler(SupervisorChannelInitializer())
+            .childHandler(MasterChannelInitializer())
 
         val f = bs.bind(PRIMARY_PORT).sync()
         if (f.isSuccess) {

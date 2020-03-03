@@ -1,4 +1,4 @@
-package org.btn.masters
+package org.btn.supervisor
 
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
