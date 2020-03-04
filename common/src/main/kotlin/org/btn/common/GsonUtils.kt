@@ -1,4 +1,4 @@
-package cn.ms668.common.server
+package org.btn.common
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder

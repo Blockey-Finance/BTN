@@ -1,7 +1,7 @@
-package cn.ms668.common.server
+package org.btn.network
 
-import cn.ms668.MsLog
 import io.netty.buffer.Unpooled
+import io.netty.handler.codec.http.*
 import io.netty.channel.ChannelFuture
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelProgressiveFuture
@@ -12,16 +12,17 @@ import io.netty.handler.codec.http.HttpHeaderNames.TRANSFER_ENCODING
 import io.netty.handler.codec.http.HttpHeaderValues.CHUNKED
 import io.netty.handler.codec.http.LastHttpContent.EMPTY_LAST_CONTENT
 import io.netty.handler.stream.ChunkedStream
+import io.netty.util.AttributeKey
 import io.netty.util.ReferenceCountUtil
+import org.btn.common.Log
+
 import org.reflections.Reflections
-import qxj.twt.httpApis
-import qxj.twt.netty.LAST_REQUEST_ORIGIN
 import java.io.*
 import java.util.*
-import qxj.twt.apis.ApiCode
 
 
-private val mslog = MsLog("HttpFunctions", false)
+private val mslog = Log("HttpFunctions", false)
+val LAST_REQUEST_ORIGIN: AttributeKey<String?> = AttributeKey.newInstance<String?>("LAST_REQUEST_ORIGIN")
 
 fun replyHttpOption(ctx: ChannelHandlerContext, origin: String?) {
     val response = DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK) //,buf
@@ -44,7 +45,7 @@ fun sendCode(
     , response: HttpResponse = DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
 ) {
     val status1 = if (phrase.isNullOrEmpty()) status else HttpResponseStatus(status.code(), phrase)
-    HttpUtil.setContentLength(response, 0) //notice 必须指定content length,否则要很久才有回应
+    HttpUtil.setContentLength(response, 0)
     response.status = status1
     sendResponse(ctx, response)
 }
@@ -88,7 +89,6 @@ fun sendJson(
     response: HttpResponse = DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
 ) {
 
-//    mslog.info("sendJson:$json")
 
     if (response is FullHttpResponse) {
         mslog.err("Should not use full http response")
@@ -100,18 +100,17 @@ fun sendJson(
     val headers = response.headers()
     headers[HttpHeaderNames.CONTENT_LENGTH] = buf.readableBytes()
     headers[HttpHeaderNames.CONTENT_TYPE] = "application/json"
-    //设置不能缓存结果
     headers[CACHE_CONTROL] = "no-store"
     headers[HttpHeaderNames.PRAGMA] = "no-cache"
     ctx.writeAndFlush(response)
-    ctx.writeAndFlush(buf) //notice netty 会release
+    ctx.writeAndFlush(buf) //notice netty will release
     ctx.writeAndFlush(EMPTY_LAST_CONTENT)
 }
 
 private fun allowOrigin(ctx: ChannelHandlerContext, response: HttpResponse) {
     val origin = ctx.channel().attr(LAST_REQUEST_ORIGIN)
     if (origin != null)
-        response.headers().set(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, origin) //对于json的除了option之外的后续请求，也要添加这个头
+        response.headers().set(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, origin)
 
     response.headers().set(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, true)
 }
@@ -134,7 +133,7 @@ fun sendFile(
             return
         }
 
-        response.headers().set(CACHE_CONTROL, "max-age=0") //必须到服务器端检测
+        response.headers().set(CACHE_CONTROL, "max-age=0")
         response.headers().set(HttpHeaderNames.ETAG, etag)
         sendStream(ctx, request, response, FileInputStream(file), file.length())
     } catch (e: Exception) {
@@ -168,7 +167,6 @@ fun getContentType(file: String): String {
     return "text/plain"
 }
 
-//notice 这样有个问题，用户没机会修改Response. send empty response的地方也是一样。感觉还是让用户创建response比较好。
 fun sendStream(
     ctx: ChannelHandlerContext,
     request: HttpRequest,
@@ -176,7 +174,7 @@ fun sendStream(
     istream: InputStream,
     fileLen: Long
 ) {
-    val sw = MsLog("SendStreamImpl", true)
+    val sw = Log("SendStreamImpl", true)
     var start: Long = 0
     var end = fileLen - 1
 
@@ -229,25 +227,18 @@ fun sendStream(
         headers.set(HttpHeaderNames.ACCEPT_RANGES, "bytes")
         headers.set(TRANSFER_ENCODING, CHUNKED)
         ctx.writeAndFlush(response)
-//        mslog.info("end=$end start=$start len=$len")
         val chunkStream = ChunkedStream(istream)
-        //notice 如果不添加这个，就不能使用HttpContentCompressor
         val ci = HttpChunkedInput(chunkStream)
 
 
-//        ctx.writeAndFlush(chunkStream, ctx.newProgressivePromise()).addListener(object:
         ctx.writeAndFlush(ci, ctx.newProgressivePromise()).addListener(object :
             ChannelProgressiveFutureListener {
             override fun operationComplete(future: ChannelProgressiveFuture?) {
-//                mslog.info("Close file stream")
                 istream.close()
                 ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
             }
 
             override fun operationProgressed(future: ChannelProgressiveFuture?, progress: Long, total: Long) {
-                //progress似乎是在真的写出之后才调用。大部分读取发生在progress之前。operation complete出现在它后面
-
-                //todo 为什么会返回相同的progress? 这个会被调用很多次？
                 if (progress >= end) {
                     chunkStream.close()
                 } else {
@@ -268,34 +259,4 @@ fun forward(ctx: ChannelHandlerContext, msg: HttpObject) {
     ctx.fireChannelRead(msg)
 }
 
-fun prepareHttpApis(apiPackageName: String, apiBasePath: String) {
-    mslog.info("prepare api begin")
-//    val pkgname = HttpApi::class.java.`package`.name
-    mslog.info("base Api Pkgname=$apiPackageName")
 
-    val refs = Reflections(apiPackageName)
-    val classes = refs.getSubTypesOf(HttpApi::class.java)
-    var callback: HttpApi
-    for (cls in classes) {
-        //notice 必须含MsWebApi注解
-        val api = cls.getAnnotation(MsWebApi::class.java) ?: continue
-        var name = api.name
-        if (name.isEmpty()) {
-            name = cls.simpleName.toLowerCase()
-        }
-        val thisApiPackage = cls.`package`.name
-        val subPackage =
-            if (thisApiPackage == apiPackageName) "" else thisApiPackage.replace("$apiPackageName.", "") + "/"
-        name = "/$apiBasePath/$subPackage$name"
-//        mslog.err("final name=$name")
-        try {
-            callback = cls.getConstructor().newInstance() as HttpApi
-        } catch (e: Exception) {
-            continue
-        }
-
-        callback.setMethod(api.method.trim { it <= ' ' }.toUpperCase())
-        httpApis[name] = callback
-    }
-    mslog.info("prepare api end")
-}
