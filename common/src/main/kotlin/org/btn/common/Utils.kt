@@ -3,8 +3,6 @@ package org.btn.common
 import java.math.BigInteger
 import java.security.MessageDigest
 
-
-
 const val PRIMARY_PORT  = 10001
 private const val SHA_KEY = "SHA-1"
 
@@ -76,3 +74,4 @@ fun main() {
     print("total number=" + totalNumber)
 }
 
+fun curTime():Long = System.currentTimeMillis()
