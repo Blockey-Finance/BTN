@@ -9,6 +9,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "io.netty:netty-all:$netty_version"
     implementation 'com.google.code.gson:gson:2.8.5'
+    compile 'org.reflections:reflections:0.9.11'
 }
 
 compileKotlin {

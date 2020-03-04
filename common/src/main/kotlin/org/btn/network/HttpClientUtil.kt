@@ -44,7 +44,7 @@ private class MyHostnameVerifier : HostnameVerifier {
     }
 }
 
-object HttpRequest {
+object HttpRequestObj {
     private val log = Log("HttpRequest");
 
     /**
