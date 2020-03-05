@@ -1,11 +1,8 @@
 package org.btn.network
 
 import io.netty.buffer.Unpooled
+import io.netty.channel.*
 import io.netty.handler.codec.http.*
-import io.netty.channel.ChannelFuture
-import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelProgressiveFuture
-import io.netty.channel.ChannelProgressiveFutureListener
 import io.netty.handler.codec.http.*
 import io.netty.handler.codec.http.HttpHeaderNames.CACHE_CONTROL
 import io.netty.handler.codec.http.HttpHeaderNames.TRANSFER_ENCODING
@@ -14,6 +11,7 @@ import io.netty.handler.codec.http.LastHttpContent.EMPTY_LAST_CONTENT
 import io.netty.handler.stream.ChunkedStream
 import io.netty.util.AttributeKey
 import io.netty.util.ReferenceCountUtil
+import kotlinx.coroutines.runBlocking
 import org.btn.common.Log
 
 import org.reflections.Reflections
@@ -259,4 +257,28 @@ fun forward(ctx: ChannelHandlerContext, msg: HttpObject) {
     ctx.fireChannelRead(msg)
 }
 
+fun sendMsCmdStr(ctx: ChannelHandlerContext?, cmd:String){
+    if(ctx == null)
+        throw java.lang.Exception("Context is null, can not send ms cmd")
+    val ch = ctx.channel()
+            ?:return
+    sendMsCmdStr(ch, cmd)
+}
 
+fun sendMsCmdStr(ch: Channel?, cmd:String) {
+
+    if(ch == null)
+        return
+
+    val msg = BtnCmd(cmd)
+
+    runBlocking {
+        writeAndFlushAsync(ch,msg)
+    }
+
+//    val pipe = ch.pipeline()
+//    val cf = DefaultChannelPromise(ch)
+//    val enc = MsCmdEncoder()
+//    enc.write(pipe.firstContext(), msg, cf)
+//    ch.pipeline().flush()
+}

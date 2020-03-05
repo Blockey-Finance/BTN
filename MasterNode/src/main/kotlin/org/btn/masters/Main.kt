@@ -7,7 +7,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel
 import org.btn.common.Log
 import org.btn.common.PRIMARY_PORT
 import org.btn.network.HttpApi
-import org.btn.network.WebApi
+import org.btn.server.WebApi
 import org.reflections.Reflections
 import java.util.LinkedHashMap
 
