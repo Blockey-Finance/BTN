@@ -12,6 +12,7 @@ println("netty_version(in supervisor node)=$netty_version")
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "io.netty:netty-all:$netty_version"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0"
     compile project(':common')
 }
 

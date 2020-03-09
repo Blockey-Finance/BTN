@@ -8,6 +8,7 @@ repositories {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "io.netty:netty-all:$netty_version"
+    compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0"
     compile project(':common')
 }
 
